@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>臺灣遊蕩犬分析 - 蘇姮方</title>
+    <!-- 引入專業視覺化與地圖套件 -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --report-navy: #1a2a3a;
+            --report-blue: #2980b9;
+            --report-gray: #f8f9fa;
+            --report-text: #34495e;
+            --report-border: #dee2e6;
+        }
+        body { 
+            font-family: "Segoe UI", "Microsoft JhengHei", sans-serif; 
+            margin: 0; padding: 0; background-color: #ecf0f1; color: var(--report-text);
+        }
+        /* 專業報表頁首風格 */
+        header {
+            background-color: var(--report-navy); color: white; padding: 40px 20px;
+            text-align: center; border-bottom: 6px solid var(--report-blue);
+        }
+        header h1 { margin: 0; font-size: 2.5em; letter-spacing: 2px; }
+        .meta-tag { margin-top: 10px; font-weight: 300; opacity: 0.9; }
+
+        .main-content { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
+        
+        /* 來源流浪狗照片展示區 */
+        .featured-img-container { text-align: center; margin-bottom: 30px; }
+        .featured-img {
+            width: 100%; max-width: 600px; border-radius: 4px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid var(--report-border);
+        }
+
+        /* 內容區塊卡片 */
+        .report-section {
+            background: white; border-radius: 4px; padding: 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 30px;
+            border-top: 5px solid var(--report-navy);
+        }
+        h2 { border-bottom: 2px solid var(--report-gray); padding-bottom: 15px; color: var(--report-navy); font-size: 1.6em; }
+        
+        .preface-content { line-height: 1.8; text-align: justify; font-size: 1.1em; color: #444; }
+
+        /* 地圖 Tooltip 設定 */
+        #map { height: 500px; width: 100%; border: 1px solid var(--report-border); margin: 20px 0; }
+        .leaflet-tooltip { 
+            background: var(--report-navy); color: white; border: none; 
+            font-size: 13px; padding: 8px; border-radius: 4px; opacity: 0.95 !important;
+        }
+
+        /* 數據分析框風格 */
+        .analysis-box {
+            background: var(--report-gray); border-left: 5px solid var(--report-blue);
+            padding: 20px; margin-top: 15px; font-size: 0.95em; line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>臺灣遊蕩犬分析</h1>
+    <div class="meta-tag">作者：蘇姮方 | 數據基準：113 年度全國調查報告</div>
+</header>
+
+<div class="main-content">
+    <!-- 引入來源流浪狗照片 -->
+    <div class="featured-img-container">
+        <img src="20220428004531.jpg" alt="來源照片：相互依偎的流浪犬" class="featured-img">
+    </div>
+
+    <div class="report-section">
+        <h2>一、前言與社會價值</h2>
+        <div class="preface-content">
+            本分析網頁致力於讓「尊重生命、保護動物」的理念成為生活的一部分，透過科學數據視覺化，探討 113 年臺灣各縣市遊蕩犬的分佈實況。遊蕩犬管理是現代社會治理與動物福利的重要課題，其數據深刻呈現了犬隻分佈與地方管理資源間的拉扯，並挑戰著各級政府與機構的收容極限。透過掌握全台 141,584 隻遊蕩犬的科學數據，能協助識別衝突熱區並精準推動減量政策。本網頁資料完全引用自農業部「動物保護資訊網」113 年遊蕩犬調查結果，並與內政部 112 年 12 月的人口統計資料進行交叉分析。
+        </div>
+    </div>
+
+    <div class="report-section">
+        <h2>二、地理分佈分析</h2>
+        <div id="map"></div>
+        <div class="analysis-box">
+            <strong>【數據洞察：全國總量排名】</strong><br>
+            113 年全國遊蕩犬總數估計為 141,584 隻。根據數據排名，中南部農業大縣承受了極大的管理壓力，其中 <strong>臺南市 (19,990 隻)</strong> 居全國之冠，其次為 <strong>嘉義縣 (16,944 隻)</strong> 與 <strong>高雄市 (10,200 隻)</strong>。地圖圓圈顏色依據數量動態調整，深色區域指出了亟需資源挹注的管理熱點。
+        </div>
+    </div>
+
+    <div class="report-section">
+        <h2>三、人犬密度指標 (隻/百人)</h2>
+        <canvas id="barChart"></canvas>
+        <div class="analysis-box">
+            <strong>【數據洞察：密度風險排名】</strong><br>
+            當考慮人口比例時，全國平均密度為 0.605 隻/百人。分析顯示人口較稀疏的東部與農業縣市如 <strong>臺東縣 (4.04)</strong> 與 <strong>嘉義縣 (3.50)</strong> 比例極高，潛在的人犬衝突風險更為嚴峻。相較之下，都会區如 <strong>臺北市 (0.08)</strong> 的密度最低，反映出明顯的城鄉生存分佈差異。
+        </div>
+    </div>
+</div>
+
+<script>
+    // 依據來源資料整理之 22 縣市完整數據陣列
+    const countyData = [
+        { name: "臺南市", count: 19990, per100: 1.07, lat: 23.00, lng: 120.22 },
+        { name: "嘉義縣", count: 16944, per100: 3.50, lat: 23.45, lng: 120.25 },
+        { name: "高雄市", count: 10200, per100: 0.37, lat: 22.62, lng: 120.30 },
+        { name: "屏東縣", count: 10024, per100: 1.26, lat: 22.66, lng: 120.48 },
+        { name: "新北市", count: 9982, per100: 0.25, lat: 25.01, lng: 121.46 },
+        { name: "南投縣", count: 9644, per100: 2.02, lat: 23.90, lng: 120.69 },
+        { name: "彰化縣", count: 9313, per100: 0.75, lat: 24.07, lng: 120.54 },
+        { name: "臺東縣", count: 8551, per100: 4.04, lat: 22.75, lng: 121.15 },
+        { name: "臺中市", count: 8542, per100: 0.30, lat: 24.14, lng: 120.67 },
+        { name: "桃園市", count: 7893, per100: 0.34, lat: 24.99, lng: 121.30 },
+        { name: "苗栗縣", count: 7403, per100: 1.38, lat: 24.56, lng: 120.82 },
+        { name: "花蓮縣", count: 6983, per100: 2.20, lat: 23.97, lng: 121.60 },
+        { name: "雲林縣", count: 4934, per100: 0.75, lat: 23.70, lng: 120.43 },
+        { name: "基隆市", count: 3112, per100: 0.86, lat: 25.12, lng: 121.74 },
+        { name: "新竹縣", count: 2396, per100: 0.41, lat: 24.83, lng: 121.01 },
+        { name: "臺北市", count: 1908, per100: 0.08, lat: 25.03, lng: 121.56 },
+        { name: "宜蘭縣", count: 1630, per100: 0.36, lat: 24.75, lng: 121.75 },
+        { name: "嘉義市", count: 906, per100: 0.34, lat: 23.48, lng: 120.44 },
+        { name: "澎湖縣", count: 520, per100: 0.48, lat: 23.57, lng: 119.57 },
+        { name: "新竹市", count: 516, per100: 0.11, lat: 24.81, lng: 120.96 },
+        { name: "金門縣", count: 167, per100: 0.12, lat: 24.44, lng: 118.37 },
+        { name: "連江縣", count: 26, per100: 0.19, lat: 26.15, lng: 119.92 }
+    ];
+
+    // 初始化地圖 (Leaflet)
+    const map = L.map('map').setView([23.7, 120.9], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    // 依據估計數變色邏輯
+    function getColor(d) {
+        return d > 15000 ? '#1a2a3a' : d > 10000 ? '#2980b9' : d > 5000 ? '#3498db' : '#85c1e9';
+    }
+
+    countyData.forEach(city => {
+        const marker = L.circle([city.lat, city.lng], {
+            color: getColor(city.count),
+            fillColor: getColor(city.count),
+            fillOpacity: 0.7,
+            radius: Math.sqrt(city.count) * 230
+        }).addTo(map);
+        
+        // 鼠標接觸 (Mouseover) 顯示 Tooltip
+        marker.bindTooltip(`
+            <div style="font-weight:bold; border-bottom:1px solid rgba(255,255,255,0.3); margin-bottom:5px;">${city.name}</div>
+            估計數：${city.count.toLocaleString()} 隻<br>
+            密度：${city.per100} 隻/百人
+        `, { sticky: true });
+    });
+
+    // 橫條圖：依照密度由高至低排序，仿分析報告風格
+    const sortedByDensity = [...countyData].sort((a, b) => b.per100 - a.per100);
+    const ctx = document.getElementById('barChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: sortedByDensity.map(d => d.name),
+            datasets: [{
+                label: '每百人遊蕩犬數',
+                data: sortedByDensity.map(d => d.per100),
+                backgroundColor: sortedByDensity.map(d => getColor(d.count)),
+                barThickness: 16
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    enabled: true,
+                    callbacks: {
+                        label: function(item) {
+                            const data = sortedByDensity[item.dataIndex];
+                            return ` 密度：${data.per100} | 估計總量：${data.count.toLocaleString()} 隻`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, border: { display: false } },
+                y: { grid: { display: false }, border: { display: false } }
+            }
+        }
+    });
+</script>
+</body>
+</html>
